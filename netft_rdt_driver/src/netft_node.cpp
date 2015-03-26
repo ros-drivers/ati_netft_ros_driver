@@ -58,6 +58,7 @@ int main(int argc, char **argv)
 
   float pub_rate_hz;
   string address;
+  string frame_id;
 
   po::options_description desc("Options");
   desc.add_options()
@@ -65,6 +66,7 @@ int main(int argc, char **argv)
     ("rate", po::value<float>(&pub_rate_hz)->default_value(100.0), "set publish rate (in hertz)")
     ("wrench", "publish older Wrench message type instead of WrenchStamped")
     ("address", po::value<string>(&address), "IP address of NetFT box")
+    ("frame_id", po::value<string>(&frame_id)->default_value("base_link"), "Frame ID for Wrench data")
     ;
      
   po::positional_options_description p;
@@ -123,10 +125,12 @@ int main(int argc, char **argv)
       if (publish_wrench) 
       {
         //geometry_msgs::Wrench(data.wrench);
+	data.header.frame_id = frame_id;
         pub.publish(data.wrench);
       }
       else 
       {
+   	data.header.frame_id = frame_id;
         pub.publish(data);
       }
     }
