@@ -1,7 +1,7 @@
 #ati_netft_ros_driver
 
 This is the driver for the ATI NET/FT box that is used to connect to ATI F/T sensor. This repo is ported from https://code.ros.org/svn/wg-ros-pkg/stacks/netft/trunk. 
-It has been catkinized and updated for ROS Indigo.
+It has been catkinized and updated for ROS Indigo. This ROS driver only supports communciation with device using the Raw Data Transfer (RDT) protocol (using UDP packets) over Ethernet. The NET/FT box can also be interfaced using Ethernet/IP or CAN but these modes are not supported by the ROS driver. 
 
 Usage
 -----
