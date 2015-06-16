@@ -41,6 +41,10 @@
 #include <boost/thread/condition.hpp>
 #include <string>
 
+#include <curl/curl.h>
+#include <tinyxml.h>
+#include <boost/lexical_cast.hpp>
+
 #include "diagnostic_updater/DiagnosticStatusWrapper.h"
 #include "geometry_msgs/WrenchStamped.h"
 
