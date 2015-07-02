@@ -124,6 +124,11 @@ void RDTCommand::pack(uint8_t *buffer) const
   buffer[7] = (sample_count_ >> 0) & 0xFF;
 }
 
+size_t write_to_string(void *ptr, size_t size, size_t count, void *stream) {
+  ((std::string*)stream)->append((char*)ptr, 0, size*count);
+  return size*count;
+}
+
 
 NetFTRDTDriver::NetFTRDTDriver(const std::string &address) :
   address_(address),
@@ -144,12 +149,74 @@ NetFTRDTDriver::NetFTRDTDriver(const std::string &address) :
   socket_.open(udp::v4());
   socket_.connect(netft_endpoint);
   
-  // TODO : Get/Set Force/Torque scale for device
-  // Force/Sclae is based on counts per force/torque value from device
-  // these value are manually read from device webserver, but in future they 
-  // may be collected using http get requests
-  static const double counts_per_force = 1000000;  
-  static const double counts_per_torque = 1000000000;
+  // Get Force/Torque scale from device webserver
+  double counts_per_force = 1000000;  
+  double counts_per_torque = 1000000000;
+  CURL *curl;
+  CURLcode result;
+  std::string response;
+  curl = curl_easy_init();
+  if(curl)
+  {
+    std::string xml_url = "http://" + address_ + "/netftcalapi.xml";
+    curl_easy_setopt(curl, CURLOPT_URL, xml_url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_string);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+    result = curl_easy_perform(curl);
+    if(result != CURLE_OK)
+      ROS_WARN("Failed to connect to the F/T sensor webserver: %s",
+              curl_easy_strerror(result));
+    else
+    {
+      TiXmlDocument xml_doc;
+      xml_doc.Parse(response.c_str());
+      if (xml_doc.Error())
+      {
+        ROS_WARN_STREAM(xml_doc.ErrorDesc());
+      }
+      else
+      {
+        TiXmlElement *cal_xml = xml_doc.FirstChildElement("netftCalibration");
+        if (!cal_xml)
+          ROS_WARN("Could not find the 'netftCalibration' element in the xml file");
+        else
+        {
+          // Counts per force
+          TiXmlElement *cpf_xml = cal_xml->FirstChildElement("calcpf");
+          if (cpf_xml && cpf_xml->GetText())
+          {
+            try
+            {
+              counts_per_force = boost::lexical_cast<double>(cpf_xml->GetText());
+            }
+            catch (boost::bad_lexical_cast &/*e*/)
+            {
+              ROS_WARN_STREAM("netftCalibration: calcpf [" << cpf_xml->GetText() << "] is not a number");
+            }
+          }
+          else
+            ROS_WARN("Could not find the 'calcpf' attribute");
+          // Counts per torque
+          TiXmlElement *cpt_xml = cal_xml->FirstChildElement("calcpt");
+          if (cpt_xml && cpt_xml->GetText())
+          {
+            try
+            {
+              counts_per_torque = boost::lexical_cast<double>(cpt_xml->GetText());
+            }
+            catch (boost::bad_lexical_cast &/*e*/)
+            {
+              ROS_WARN_STREAM("netftCalibration: calcpt [" << cpt_xml->GetText() << "] is not a number");
+            }
+          }
+          else
+            ROS_WARN("Could not find the 'calcpt' attribute");
+        }
+      }
+    }
+    curl_easy_cleanup(curl);
+  }
+
   force_scale_ = 1.0 / counts_per_force;
   torque_scale_ = 1.0 / counts_per_torque;
 
