@@ -50,11 +50,6 @@ target_link_libraries(netft_rtt_controller netft_rdt_driver netft_hardware_inter
 
 orocos_generate_package()
 
-add_definitions(-DRTT_COMPONENT)
-orocos_component(netft_rtt_controller src/netft_rtt_controller.cpp)
-target_link_libraries(netft_rtt_controller netft_rdt_driver netft_hardware_interface ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-
-orocos_generate_package()
 
 #############
 ## Install ##
