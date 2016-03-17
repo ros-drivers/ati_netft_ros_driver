@@ -68,6 +68,7 @@ public:
   //! Wait for new NetFT data to arrive.  
   // Returns true if new data has arrived, false it function times out
   bool waitForNewData(void);
+  bool biasSensor();
 
 protected:
   void recvThreadFunc(void);
