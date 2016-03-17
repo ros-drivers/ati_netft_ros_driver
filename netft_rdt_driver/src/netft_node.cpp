@@ -101,7 +101,6 @@ int main(int argc, char **argv)
     ROS_WARN("Publishing NetFT data as geometry_msgs::Wrench is deprecated");
   }
 
-  //std::auto_ptr<netft_rdt_driver::NetFTRDTDriver> netft(new netft_rdt_driver::NetFTRDTDriver(address));
   boost::shared_ptr<netft_rdt_driver::NetFTRDTDriver> netft(new netft_rdt_driver::NetFTRDTDriver(address));
   ros::Publisher pub;
   if (publish_wrench)
