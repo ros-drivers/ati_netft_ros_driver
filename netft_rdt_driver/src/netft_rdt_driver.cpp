@@ -98,6 +98,7 @@ struct RDTCommand
   enum {
     CMD_STOP_STREAMING=0, 
     CMD_START_HIGH_SPEED_STREAMING=2,
+    CMD_BIAS_SENSOR=0x0042,
     // More command values are available but are not used by this driver
   };
 
@@ -355,6 +356,16 @@ void NetFTRDTDriver::getData(geometry_msgs::WrenchStamped &data)
   { boost::unique_lock<boost::mutex> lock(mutex_);
     data = new_data_;
   }  
+}
+
+bool NetFTRDTDriver::biasSensor(){
+    RDTCommand bias_sensor;
+    bias_sensor.command_=RDTCommand::CMD_BIAS_SENSOR;
+    bias_sensor.sample_count_=RDTCommand::INFINITE_SAMPLES;
+    uint8_t buffer[RDTCommand::RDT_COMMAND_SIZE];
+    bias_sensor.pack(buffer);
+    socket_.send(boost::asio::buffer(buffer, RDTCommand::RDT_COMMAND_SIZE));
+    return true;
 }
 
 

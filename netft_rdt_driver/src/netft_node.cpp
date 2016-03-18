@@ -46,10 +46,14 @@
 #include <iostream>
 #include <memory>
 #include <boost/program_options.hpp>
+#include "std_srvs/Empty.h"
 
 namespace po = boost::program_options;
 using namespace std;
 
+bool bias_srv_cb(std_srvs::Empty::Request &req,std_srvs::Empty::Response &rsp, boost::shared_ptr<netft_rdt_driver::NetFTRDTDriver> driver_ptr){
+    return driver_ptr->biasSensor();
+}
 
 int main(int argc, char **argv)
 { 
@@ -97,7 +101,7 @@ int main(int argc, char **argv)
     ROS_WARN("Publishing NetFT data as geometry_msgs::Wrench is deprecated");
   }
 
-  std::auto_ptr<netft_rdt_driver::NetFTRDTDriver> netft(new netft_rdt_driver::NetFTRDTDriver(address));
+  boost::shared_ptr<netft_rdt_driver::NetFTRDTDriver> netft(new netft_rdt_driver::NetFTRDTDriver(address));
   ros::Publisher pub;
   if (publish_wrench)
   {
@@ -116,6 +120,8 @@ int main(int argc, char **argv)
   diag_array.status.reserve(1);
   diagnostic_updater::DiagnosticStatusWrapper diag_status;
   ros::Time last_diag_pub_time(ros::Time::now());
+
+  ros::ServiceServer bias_srv = nh.advertiseService<std_srvs::Empty::Request,std_srvs::Empty::Response>("/Bias_sensor",boost::bind(bias_srv_cb,_1,_2,netft));
 
   while (ros::ok())
   {
